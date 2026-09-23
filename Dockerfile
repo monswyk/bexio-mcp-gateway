@@ -34,11 +34,13 @@ ENV NODE_ENV=production \
     DATA_DIR=/data \
     MCP_CLIENTS_FILE=/config/clients.json
 
-RUN groupadd --gid 1001 mcp && \
-    useradd --uid 1001 --gid mcp --shell /bin/false --create-home mcp && \
-    mkdir -p /data /config && \
-    printf '%s\n' '{}' > /config/clients.json && \
-    chown -R mcp:mcp /data /config
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 1001 mcp \
+    && useradd --uid 1001 --gid mcp --shell /bin/false --create-home mcp \
+    && mkdir -p /data /config \
+    && printf '%s\n' '{}' > /config/clients.json \
+    && chown -R mcp:mcp /data /config
 
 COPY --from=build --chown=mcp:mcp /app/dist ./dist
 COPY --from=build --chown=mcp:mcp /app/node_modules ./node_modules
@@ -48,8 +50,5 @@ USER mcp
 
 VOLUME ["/data"]
 EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8000)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 ENTRYPOINT ["node", "dist/index.js"]
