@@ -3,8 +3,8 @@
 The gateway is a single container that lets several Claude Desktop users work with Bexio at the same time:
 
 ```
-Claude Desktop (anna) ─┐                      ┌──────────────────────────┐
-Claude Desktop (beat) ─┼─ HTTPS + access key ─▶ bexio-mcp-gateway /mcp   │── OAuth token ──▶ Bexio API
+Claude Desktop ─┐                      ┌──────────────────────────┐
+Claude Desktop ─┼─ HTTPS + access key ─▶ bexio-mcp-gateway /mcp   │── OAuth token ──▶ Bexio API
 Claude Desktop (...)  ─┘                      │  connection "backoffice" │
                                               └──────────────────────────┘
 ```
@@ -76,7 +76,7 @@ If you already run a reverse proxy, remove the `caddy` service, publish port 800
 For each Claude Desktop user:
 
 ```bash
-./scripts/client-add.sh anna backoffice
+./scripts/client-add.sh <name> backoffice
 ```
 
 The script prints the access key (`bmg_...`) **once**. Only its SHA-256 hash is stored in `config/clients.json`. The running gateway picks up the change within seconds; no restart is needed.
@@ -87,8 +87,8 @@ To revoke a client, remove its entry from `config/clients.json` or set `"disable
 
 ```json
 {
-  "anna": { "keyHash": "sha256:…", "connection": "backoffice" },
-  "beat": { "keyHash": "sha256:…", "connection": "backoffice", "disabled": true }
+  "client": { "keyHash": "sha256:…", "connection": "backoffice" },
+  "other": { "keyHash": "sha256:…", "connection": "backoffice", "disabled": true }
 }
 ```
 

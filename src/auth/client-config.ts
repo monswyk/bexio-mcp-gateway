@@ -4,7 +4,7 @@
  * clients.json maps a client name to the SHA-256 hash of its access key and the
  * Bexio connection it acts through:
  *
- *   { "anna": { "keyHash": "sha256:<hex>", "connection": "backoffice" } }
+ *   { "client": { "keyHash": "sha256:<hex>", "connection": "backoffice" } }
  *
  * Only hashes are stored, so the file itself cannot be used to log in. The file is
  * re-read when it changes, so adding or disabling a client needs no restart.
@@ -52,7 +52,7 @@ export function parseClientsConfig(json: string): ParsedClient[] {
     throw new Error(`clients.json is not valid JSON: ${error instanceof Error ? error.message : String(error)}`);
   }
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error('clients.json must be an object like {"anna": {"keyHash": "sha256:...", "connection": "backoffice"}}');
+    throw new Error('clients.json must be an object like {"client": {"keyHash": "sha256:...", "connection": "backoffice"}}');
   }
 
   const clients: ParsedClient[] = [];
