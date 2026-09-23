@@ -5,11 +5,11 @@ The gateway is a single container that lets several MCP clients work with Bexio 
 ```
 MCP client (client-1) ─┐
 MCP client (client-2) ─┼─ HTTPS + access key ─▶ /mcp ── OAuth ──▶ Bexio API
-MCP client (client-n) ─┘                        connection "backoffice"
+MCP client (client-n) ─┘                        Bexio user "bexio-user"
 ```
 
-- A **connection** is one Bexio login (for example the shared `backoffice` user). An admin connects it once in the browser. After that the gateway refreshes the token in the background; the refresh token stays valid as long as it is used at least once a year, and the gateway uses it daily.
-- A **client** is one MCP client. It gets its own access key and is mapped to a connection. Several clients can share one connection. If you later work with more Bexio users, add a connection per user and map the clients accordingly.
+- A **Bexio user** is one Bexio login. An admin connects it once in the browser. After that the gateway refreshes the token in the background; the refresh token stays valid as long as it is used at least once a year, and the gateway uses it daily.
+- A **client** is one MCP client. It gets its own access key and is mapped to a Bexio user. Several clients can share one Bexio user. If you later work with more Bexio logins, add one per login and map the clients accordingly.
 
 ## 1. Register an app at Bexio
 
@@ -80,7 +80,7 @@ docker run -d --name bexio-mcp-gateway \
 ## 3. Connect Bexio
 
 1. Open `https://<your-domain>/admin`. Enter any user name and the admin key from `secrets/gateway_admin_key` as the password.
-2. Keep the suggested label `backoffice` (or enter another one) and click **Connect with Bexio**.
+2. Keep the suggested Bexio user `bexio-user` (or enter another one) and click **Connect with Bexio**.
 3. Sign in at Bexio **as the user whose rights the AI should use**, then approve the consent screen.
 4. The gateway confirms the connection. On `/admin` it is listed as `active` together with the Bexio company and user.
 
@@ -91,7 +91,7 @@ docker run -d --name bexio-mcp-gateway \
 For each MCP client:
 
 ```bash
-./scripts/client-add.sh client-1 backoffice
+./scripts/client-add.sh client-1 bexio-user
 ```
 
 The script prints the access key (`bmg_...`) **once**. Only its SHA-256 hash is stored in `config/clients.json`. The running gateway picks up the change within seconds; no restart is needed.
@@ -102,8 +102,8 @@ To revoke a client, remove its entry from `config/clients.json` or set `"disable
 
 ```json
 {
-  "client-1": { "keyHash": "sha256:…", "connection": "backoffice" },
-  "client-2": { "keyHash": "sha256:…", "connection": "backoffice", "disabled": true }
+  "client-1": { "keyHash": "sha256:…", "connection": "bexio-user" },
+  "client-2": { "keyHash": "sha256:…", "connection": "bexio-user", "disabled": true }
 }
 ```
 

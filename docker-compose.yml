@@ -4,7 +4,7 @@
 #   cp gateway.env.example .env        # fill in the public URL and Bexio client id
 #   ./scripts/init-secrets.sh          # creates secrets/ and config/clients.json
 #   docker compose up -d --build
-#   open https://<your-domain>/admin and connect "backoffice"
+#   open https://<your-domain>/admin and connect "bexio-user"
 
 services:
   bexio-mcp:

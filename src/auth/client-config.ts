@@ -4,7 +4,7 @@
  * clients.json maps a client name to the SHA-256 hash of its access key and the
  * Bexio connection it acts through:
  *
- *   { "client-1": { "keyHash": "sha256:<hex>", "connection": "backoffice" } }
+ *   { "client-1": { "keyHash": "sha256:<hex>", "connection": "bexio-user" } }
  *
  * Only hashes are stored, so the file itself cannot be used to log in. The file is
  * re-read when it changes, so adding or disabling a client needs no restart.
@@ -52,7 +52,7 @@ export function parseClientsConfig(json: string): ParsedClient[] {
     throw new Error(`clients.json is not valid JSON: ${error instanceof Error ? error.message : String(error)}`);
   }
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error('clients.json must be an object like {"client-1": {"keyHash": "sha256:...", "connection": "backoffice"}}');
+    throw new Error('clients.json must be an object like {"client-1": {"keyHash": "sha256:...", "connection": "bexio-user"}}');
   }
 
   const clients: ParsedClient[] = [];
@@ -69,7 +69,7 @@ export function parseClientsConfig(json: string): ParsedClient[] {
       throw new Error(`clients.json: "${name}".keyHash must look like "sha256:<64 hex chars>".`);
     }
     if (typeof entry.connection !== "string" || !LABEL_PATTERN.test(entry.connection)) {
-      throw new Error(`clients.json: "${name}".connection must be a connection label like "backoffice".`);
+      throw new Error(`clients.json: "${name}".connection must be a Bexio user like "bexio-user".`);
     }
     if (seenHashes.has(entry.keyHash)) {
       throw new Error(`clients.json: "${name}" reuses the key of another client.`);

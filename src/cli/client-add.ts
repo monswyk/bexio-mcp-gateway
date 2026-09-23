@@ -2,7 +2,7 @@
 /**
  * Create a gateway access key for a client.
  *
- *   node dist/cli/client-add.js <name> <connection> [--file /config/clients.json]
+ *   node dist/cli/client-add.js <name> <bexio-user> [--file /config/clients.json]
  *
  * Prints the key once (it is not stored anywhere) and writes its hash to clients.json.
  * Without --file the entry is only printed, e.g. to paste it by hand.
@@ -12,7 +12,7 @@ import fs from "node:fs";
 import { generateClientKey, hashClientKey, parseClientsConfig } from "../auth/client-config.js";
 
 function usage(): never {
-  console.error("Usage: client-add <name> <connection> [--file <clients.json>]");
+  console.error("Usage: client-add <name> <bexio-user> [--file <clients.json>]");
   process.exit(2);
 }
 
@@ -34,7 +34,7 @@ if (file) {
   const json = JSON.stringify(current, null, 2) + "\n";
   parseClientsConfig(json);
   fs.writeFileSync(file, json, { mode: 0o644 });
-  console.error(`${replaced ? "Replaced" : "Added"} client "${name}" -> connection "${connection}" in ${file}.`);
+  console.error(`${replaced ? "Replaced" : "Added"} client "${name}" -> Bexio user "${connection}" in ${file}.`);
 } else {
   const json = JSON.stringify({ [name]: entry });
   parseClientsConfig(json);

@@ -318,15 +318,15 @@ function renderAdminPage(connections: ConnectionManager, clients: ClientRegistry
   return page(
     "bexio-mcp-gateway",
     `<h2>Bexio connections</h2>
-<table><tr><th>Label</th><th>Company</th><th>Bexio user</th><th>Status</th><th>Last refresh</th><th>Last error</th><th></th></tr>
+<table><tr><th>Bexio user</th><th>Company</th><th>Account</th><th>Status</th><th>Last refresh</th><th>Last error</th><th></th></tr>
 ${connRows || '<tr><td colspan="7">No connection yet.</td></tr>'}</table>
 <form method="get" action="/admin/connect">
-  <label>New connection label <input name="label" value="${conns.length === 0 ? "backoffice" : ""}" pattern="[a-z0-9][a-z0-9_-]{0,39}" required></label>
+  <label>Bexio user <input name="label" value="${conns.length === 0 ? "bexio-user" : ""}" pattern="[a-z0-9][a-z0-9_-]{0,39}" required></label>
   <button>Connect with Bexio</button>
 </form>
 <h2>Clients</h2>
-<table><tr><th>Name</th><th>Connection</th><th>State</th></tr>
+<table><tr><th>Name</th><th>Bexio user</th><th>State</th></tr>
 ${clientRows || '<tr><td colspan="3">No clients in clients.json.</td></tr>'}</table>
-<p>Add clients with <code>scripts/client-add.sh &lt;name&gt; &lt;connection&gt;</code> on the Docker host; changes to clients.json apply without restart.</p>`
+<p>Add clients with <code>scripts/client-add.sh &lt;name&gt; &lt;bexio-user&gt;</code> on the Docker host; changes to clients.json apply without restart.</p>`
   );
 }

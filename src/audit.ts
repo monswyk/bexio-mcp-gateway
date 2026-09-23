@@ -1,7 +1,7 @@
 /**
  * Audit log for gateway mode: one JSON line per tool call on stderr.
  *
- * Several people may act through the same Bexio login (e.g. "backoffice"), so
+ * Several people may act through the same Bexio user (e.g. "bexio-user"), so
  * Bexio's own history cannot tell them apart. This log records who called which
  * tool. Arguments and results are deliberately not logged (personal/financial data).
  */

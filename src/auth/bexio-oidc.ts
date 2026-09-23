@@ -1,7 +1,7 @@
 /**
  * Bexio OpenID Connect: authorization code flow (PKCE) and background token refresh.
  *
- * A "connection" is one Bexio user login stored under a label (e.g. "backoffice").
+ * A connection is one Bexio user login stored under that user's label (e.g. "bexio-user").
  * After the one-time browser consent, access tokens are refreshed automatically:
  * on demand shortly before they expire, and by a periodic job so the offline
  * session never hits Bexio's 1-year idle timeout. Bexio rotates refresh tokens,

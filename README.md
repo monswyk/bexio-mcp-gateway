@@ -9,10 +9,10 @@ This is a fork of [promptpartner/bexio-mcp-server](https://github.com/promptpart
 ```
 MCP client (client-1) ─┐
 MCP client (client-2) ─┼─ HTTPS + access key ──▶ /mcp ── OAuth ──▶ Bexio API
-MCP client (client-n) ─┘                         connection "backoffice"
+MCP client (client-n) ─┘                         Bexio user "bexio-user"
 ```
 
-- A **connection** is one Bexio login, for example the shared `backoffice` user. Several clients can share it. A later Bexio user is another connection.
+- A **Bexio user** is one Bexio login. Several clients can share it. Another Bexio login is another user.
 - A **client** is one MCP client. Its access key is stored only as a SHA-256 hash. Adding or revoking a client does not need a restart.
 
 ## Run
@@ -56,14 +56,14 @@ Forward `https://<your-domain>` to that port. Do not buffer `/mcp`: it uses serv
 
 Open `https://<your-domain>/admin`. The user name can be anything; the password is `GATEWAY_ADMIN_KEY`.
 
-Enter a label (`backoffice` is filled in when nothing is connected yet) and choose **Connect with Bexio**. Sign in as the Bexio user whose permissions the tools should have, then approve the consent screen. The row shows `active` together with the company and the user.
+Enter the Bexio user (`bexio-user` is filled in when nothing is connected yet) and choose **Connect with Bexio**. Sign in as that Bexio user, then approve the consent screen. The row shows `active` together with the company and the account.
 
 The gateway requests the scopes the tools need. Payroll scopes are read-only. Narrow them with `BEXIO_SCOPES` (the list must contain `offline_access`). Bexio still enforces what that user is allowed to do.
 
 ## Add a client
 
 ```bash
-docker exec bexio-mcp-gateway node dist/cli/client-add.js client-1 backoffice --file /data/clients.json
+docker exec bexio-mcp-gateway node dist/cli/client-add.js client-1 bexio-user --file /data/clients.json
 ```
 
 The command prints the access key (`bmg_…`) once. Running it again for the same name replaces the key. To revoke someone, delete their entry in `/data/clients.json` or set `"disabled": true`.

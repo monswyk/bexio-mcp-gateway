@@ -88,7 +88,7 @@ export async function startGateway(args: GatewayArgs, env: NodeJS.ProcessEnv = p
       `${clients.list().filter((c) => !c.disabled).length} enabled client(s), redirect URI ${redirectUri}`
   );
   if (existing.length === 0) {
-    logger.warn(`No Bexio connection yet. Open ${publicBaseUrl}/admin and connect one (e.g. "backoffice").`);
+    logger.warn(`No Bexio user yet. Open ${publicBaseUrl}/admin and connect one (e.g. "bexio-user").`);
   }
 
   connections.startBackgroundRefresh();
