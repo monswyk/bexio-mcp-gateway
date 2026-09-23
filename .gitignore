@@ -1,0 +1,24 @@
+
+# Planning and local config
+.planning/
+.claude/
+
+# Local marketing/docs (not for git)
+marketing/
+
+# Internal workflow docs (not for public repo)
+PUBLISHING.md
+
+# Sensitive files - NEVER COMMIT
+.env
+src/.env
+.mcpregistry_github_token
+.mcpregistry_registry_token
+*.token
+
+# Build artifacts (committed separately)
+*.mcpb
+
+# Gateway deployment (secrets and client key hashes)
+/secrets/
+/config/

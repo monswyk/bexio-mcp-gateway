@@ -1,0 +1,48 @@
+# Version control
+.git
+
+# Planning and development files
+.planning
+.claude
+
+# Environment files
+.env
+.env.example
+
+# Token files - NEVER INCLUDE
+.mcpregistry_github_token
+.mcpregistry_registry_token
+*.token
+
+# Marketing assets (too large for bundle)
+marketing
+
+# Legacy version
+mcp_bexio-main-v1
+
+# Dependencies (installed fresh on user machine)
+node_modules
+
+# Source files (only dist is needed)
+src
+
+# Documentation (except README)
+*.md
+!README.md
+
+# Build configuration
+tsconfig.json
+vite.config.ts
+
+# Repo tooling / operating-agreement harness — never ship in the extension
+.harness
+scripts
+hooks
+.github
+docs
+
+# This file
+.mcpbignore
+
+# Windows artifacts
+nul

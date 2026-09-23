@@ -1,0 +1,96 @@
+{
+  "manifest_version": "0.3",
+  "name": "bexio-mcp-server",
+  "version": "2.5.0",
+  "description": "Connect an MCP client to your Bexio accounting system. Manage invoices, contacts, projects, time tracking, and 300+ more tools through natural conversation. Supports multiple Bexio companies (mandates) from one install.",
+  "author": {
+    "name": "bexio-mcp-gateway"
+  },
+  "homepage": "https://github.com/promptpartner/bexio-mcp-server",
+  "icon": "icon.png",
+  "license": "MIT",
+  "privacy_policies": [
+    "https://github.com/promptpartner/bexio-mcp-server/blob/master/PRIVACY.md",
+    "https://www.bexio.com/en-CH/privacy-policy"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/index.js"],
+      "env": {
+        "BEXIO_API_TOKEN": "${user_config.api_token}",
+        "BEXIO_API_TOKENS": "${user_config.additional_tokens}",
+        "BEXIO_DEFAULT_COMPANY": "${user_config.default_company}",
+        "BEXIO_BASE_URL": "${user_config.base_url}",
+        "BEXIO_ENABLED_CATEGORIES": "${user_config.enabled_categories}"
+      }
+    }
+  },
+  "user_config": {
+    "api_token": {
+      "type": "string",
+      "title": "Bexio API Token",
+      "description": "Your Bexio API token (the primary company). Get it from Bexio > Settings > API Tokens. Required for authentication.",
+      "required": true
+    },
+    "additional_tokens": {
+      "type": "string",
+      "title": "Additional companies (optional)",
+      "description": "For multiple Bexio companies (mandates): a comma-separated list of label:token pairs, e.g. 'Acme:token1,Globex:token2'. Generate each token while logged into that company. Then ask the client to switch to Acme, for example in Claude Desktop. Leave empty for a single company.",
+      "required": false,
+      "default": ""
+    },
+    "default_company": {
+      "type": "string",
+      "title": "Default/primary company label (optional)",
+      "description": "A name for the primary company above (e.g. 'HeadOffice') — it becomes the active company at startup and the label you switch back to. Leave empty to use 'default'.",
+      "required": false,
+      "default": ""
+    },
+    "base_url": {
+      "type": "string",
+      "title": "API Base URL",
+      "description": "Bexio API endpoint. Change only if using a custom endpoint.",
+      "required": false,
+      "default": "https://api.bexio.com/2.0"
+    },
+    "enabled_categories": {
+      "type": "string",
+      "title": "Enabled Tool Categories (optional)",
+      "description": "Comma-separated whitelist to reduce token usage. Example: contacts,invoices,purchase,banking. Leave empty to register all tools. Available: reference, company, banking, projects, timetracking, accounting, purchase, files, payroll, contacts, invoices, orders, quotes, payments, reminders, deliveries, items, reports, users, misc, notes, tasks, stock, docs, positions.",
+      "required": false,
+      "default": ""
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"]
+  },
+  "tools": [
+    {
+      "name": "list_invoices",
+      "description": "List invoices with pagination and filtering"
+    },
+    {
+      "name": "preview_invoice",
+      "description": "Display interactive invoice preview"
+    },
+    {
+      "name": "show_contact_card",
+      "description": "Display formatted contact information"
+    },
+    {
+      "name": "show_dashboard",
+      "description": "Display dashboard with invoice and contact summary"
+    },
+    {
+      "name": "list_contacts",
+      "description": "List contacts with pagination"
+    },
+    {
+      "name": "create_invoice",
+      "description": "Create a new invoice in Bexio"
+    }
+  ]
+}

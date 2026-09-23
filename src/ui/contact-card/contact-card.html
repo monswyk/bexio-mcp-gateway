@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Card</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+      color: #1a1a1a;
+      background: #f9fafb;
+      padding: 1.5rem;
+    }
+    .card {
+      max-width: 400px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      overflow: hidden;
+    }
+    .card-header {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .avatar {
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 2rem;
+      font-weight: 600;
+    }
+    .card-header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .card-header .company {
+      font-size: 0.875rem;
+      opacity: 0.9;
+    }
+    .card-body {
+      padding: 1.25rem;
+    }
+    .info-section {
+      margin-bottom: 1.25rem;
+    }
+    .info-section:last-child {
+      margin-bottom: 0;
+    }
+    .info-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-bottom: 0.25rem;
+    }
+    .info-row {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    .info-icon {
+      width: 20px;
+      height: 20px;
+      margin-right: 0.75rem;
+      color: #6b7280;
+    }
+    .info-value {
+      color: #374151;
+    }
+    .info-value a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+    .info-value a:hover {
+      text-decoration: underline;
+    }
+    .address-block {
+      color: #374151;
+      font-size: 0.95rem;
+    }
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+      color: #6b7280;
+      background: #fff;
+    }
+    .type-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 0.5rem;
+    }
+    .type-company { background: rgba(255, 255, 255, 0.2); }
+    .type-person { background: rgba(255, 255, 255, 0.2); }
+  </style>
+</head>
+<body>
+  <div id="app" class="card loading">Loading contact...</div>
+  <script type="module" src="./mcp-app.ts"></script>
+</body>
+</html>

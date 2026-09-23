@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice Preview</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 1.5rem;
+    }
+    .invoice {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .header-left h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 0.25rem;
+    }
+    .header-left .title {
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+    .header-right {
+      text-align: right;
+    }
+    .header-right .dates {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 0.5rem;
+    }
+    .status-draft { background: #e5e7eb; color: #374151; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-sent { background: #dbeafe; color: #1e40af; }
+    .status-paid { background: #d1fae5; color: #065f46; }
+    .status-overdue { background: #fee2e2; color: #991b1b; }
+    .status-cancelled { background: #f3f4f6; color: #6b7280; }
+    .contact-section {
+      background: #f9fafb;
+      padding: 1rem 1.25rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .contact-section h2 {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-bottom: 0.5rem;
+    }
+    .contact-section .name {
+      font-weight: 600;
+      color: #111827;
+    }
+    .contact-section .email {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+    .line-items {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.5rem;
+    }
+    .line-items th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #6b7280;
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .line-items th:last-child,
+    .line-items td:last-child {
+      text-align: right;
+    }
+    .line-items td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .total-section {
+      display: flex;
+      justify-content: flex-end;
+      padding-top: 1rem;
+      border-top: 2px solid #e5e7eb;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      min-width: 200px;
+    }
+    .total-label {
+      font-weight: 600;
+      color: #374151;
+    }
+    .total-amount {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="loading">Loading invoice...</div>
+  <script type="module" src="./mcp-app.ts"></script>
+</body>
+</html>

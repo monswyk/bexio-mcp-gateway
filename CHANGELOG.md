@@ -1,0 +1,210 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [2.5.0] - 2026-07-01
+
+### Added — Multiple Bexio companies (mandates) from one server
+Bexio binds each API token to a single company, so multi-company users previously had
+to run one server instance per company (≈314 tools each in the system prompt). Now **one
+instance can hold several companies' tokens and switch between them**, adding just two
+tools.
+- **`BEXIO_API_TOKENS`** env var configures multiple companies, as JSON
+  (`{"Acme":"<token>","Globex":"<token>"}`) or a delimited list
+  (`Acme:<token>,Globex:<token>`). **`BEXIO_DEFAULT_COMPANY`** picks the company active at
+  startup. The existing single **`BEXIO_API_TOKEN`** still works unchanged.
+- **`list_companies`** — shows each configured company's label, real company name, and
+  which is active. **`select_company`** — switches the active company; every other tool
+  then operates on it ("in Globex, list open invoices"). These two tools are registered
+  only when `BEXIO_API_TOKENS` is set, so single-company setups are byte-for-byte
+  unchanged (still 314 tools; 316 in multi-company mode).
+- In multi-company mode, successful responses include `active_company` in their `meta`
+  block so it's always clear which company a result came from.
+- The MCP bundle (`.mcpb`) gained optional **Additional companies** and
+  **Default company label** config fields.
+- Tokens are never logged or returned; `list_companies` exposes labels + company names
+  only.
+
+### Notes
+- The active company is **process-global** — ideal for the stdio use
+  case. For concurrent multi-tenant HTTP deployments, continue running one instance
+  per company.
+
+## [2.4.1] - 2026-06-30
+
+### Fixed (7 issues reported against the bill/payment lifecycle — #6–#12, all live-verified)
+- **`update_bill` no longer silently destroys data (#7).** Bexio's v4 `PUT /purchase/bills/{id}` replaces the whole bill and drops every field you don't resend — most damagingly `document_no`, whose loss then blocks booking. `update_bill` is now a safe partial update: it fetches the current bill, deep-merges your changes, and writes back only the writable fields (preserving `document_no`). Send the full `line_items` array to change a line; omit it to leave lines untouched.
+- **`issue_bill` works (#6).** The old `POST /purchase/bills/{id}/issue` returned 404 (no such sub-path). Booking a DRAFT bill now uses `PUT /purchase/bills/{id}/bookings/BOOKED`.
+- **`mark_bill_as_paid` returns actionable guidance instead of a 404 (#6).** Bexio has no mark-as-paid endpoint; a bill is marked paid by recording a payment. The tool now points you to `create_outgoing_payment` with the bill's `bill_id` (which flips the bill to PAID) rather than firing a request that always fails.
+- **`update_outgoing_payment` works (#8).** The old `PUT /purchase/outgoing-payments/{id}` returned 405. The update now uses the collection path with `payment_id` in the body and is reduced to the fields Bexio actually accepts (so passing back a full payment object no longer fails). Note: Bexio only allows updating IBAN/QR payments, not MANUAL ones.
+- **`create_bill` / `create_outgoing_payment` now document the real fields (#9).** Schemas were corrected from the wrong `contact_id`/`positions` to the actual `supplier_id`, `line_items` (with `booking_account_id`, not `account_id`), structured `address`, `contact_partner_id`, `manual_amount`/`amount_calc`; and for payments `payment_type` (IBAN/QR/MANUAL), `sender_bank_account_id`, `reference_no` (QR) vs `message` (IBAN), `fee_type`.
+- **`download_file` no longer overflows context on large files (#10).** Files above a threshold (default 64 KB decoded, override via `BEXIO_DOWNLOAD_INLINE_MAX_BYTES`) are written to disk and the tool returns `file_path` instead of inline base64. Small files still inline (backward-compatible). New optional `output_path` chooses the destination. In HTTP mode the path is on the server host.
+- **stdio server no longer orphans (#11).** When the MCP client disconnects (stdin closes) or sends SIGINT/SIGTERM, the process now shuts down and exits instead of lingering with the API token. HTTP mode is unaffected.
+- **`create_iban_payment` / `create_qr_payment` warn that they are NOT bill-linked (#12).** Their descriptions now steer you to `create_outgoing_payment` (with `bill_id`) when you actually mean to pay a supplier bill, and a `_hint` is attached to the response. `update_iban_payment` notes a bill cannot be attached afterward.
+
+### Added
+- Unit tests (vitest) for the new `mergeBillData` (#7) and `shouldInline`/`writeDownloadToTemp` (#10) logic, plus test infra (`vitest.config.ts`).
+
+## [2.4.0] - 2026-06-16
+
+### Added (314 tools, +4)
+- **`get_account_balances` (Saldenliste)** — account balances computed from the accounting journal, since Bexio's API has no native balance endpoint. `balance = sum(debits) − sum(credits)` per account over a date range, enriched with `account_no`/`name`. Defaults to the current business year (includes opening/carry-forward entries, so it reflects the current balance). Optional `account_id` filter and `start_date`/`end_date` override. Paginates the journal with a logged safety cap.
+- **`get_currency_exchange_rates`** and **`list_currency_codes`** — wrap the Bexio v3.0 currency exchange-rate and ISO-code endpoints (added by Bexio in 2024) for multi-currency reporting.
+- **`get_employee_payslip_pdf`** — fetch one employee's payslip (Lohnabrechnung) as a base64 PDF for a given year/month (`/4.0/payroll/employees/{id}/paystub-pdf/{year}/{month}`), replacing the non-functional `list_payroll_documents` stub (which Bexio's API never supported). Requires the Payroll module.
+
+### Notes
+- Account balances are **computed, not authoritative**: the figure equals the live balance when the date range covers the full business year (the default); for partial ranges it is the period movement. Validate against Bexio's own Saldenliste/Kontenblatt.
+
+## [2.3.1] - 2026-06-16
+
+### Fixed (critical — server crashed on startup for everyone)
+- **Server no longer crashes during the `initialize` handshake.** v2.3.0 registered the MCP Apps UI panels using `path.join(import.meta.dirname, "ui/ui")`. `import.meta.dirname` only exists on Node ≥ 20.11; on the older Node bundled by some MCP clients it is `undefined`, so `path.join(undefined, …)` threw synchronously inside `initialize()` (before the transport connected), which propagated to the top-level handler and called `process.exit(1)` — killing the process ~50 ms after receiving `initialize`, so **no tools ever appeared**. The UI base path is now resolved via a Node-version-safe helper (`import.meta.url` → `cwd` fallback) that can never throw at registration time.
+- Global `uncaughtException` / `unhandledRejection` handlers now log the full stack to stderr (and keep the server alive), so a future peripheral failure is diagnosable instead of a silent exit.
+
+### Changed
+- **Interactive UI panels (MCP Apps: `preview_invoice`, `show_contact_card`, `show_dashboard`) are now opt-in.** They register only when `BEXIO_ENABLE_UI=true`, and registration is wrapped in try/catch so a UI failure can never take down the 310 core data tools. Default behaviour: all data tools, no UI.
+- `.env` loading is now awaited before environment variables are read (the previous fire-and-forget `import("dotenv")` raced the reads, leaving npm/.env users with an undefined token). MCPB / claude.ai users — whose env is injected by the host — are unaffected. The tool registry is imported after env load so `BEXIO_ENABLED_CATEGORIES` is honoured from `.env` too.
+- `serverInfo.version` reported over MCP now matches the package version (was hardcoded `2.0.0`).
+
+## [2.3.0] - 2026-05-28
+
+### Added
+- `BEXIO_ENABLED_CATEGORIES` env var: comma-separated whitelist of tool categories to register, to reduce system-prompt token usage for focused workflows or smaller models. Empty/unset registers all tools (backward compatible). Thanks to @Fabrik4 (#5).
+
+### Fixed (write operations & schemas, from live API testing)
+Incorporated fixes from @ueliwyss (#4), verified against the live Bexio API:
+- Edit operations (quote/order/invoice) use a writable-field whitelist and supply Bexio-required defaults (`nb_decimals_amount`, `nb_decimals_price`, `is_compact_view`) that GET doesn't return, fixing PUT rejections.
+- Copy (quote/invoice) sends the required `contact_id` (fetched from the source document).
+- Subtotal/pagebreak position creation sends the non-empty body Bexio requires.
+- `search_bills` uses GET (Bexio v4.0 rejects POST /search for bills); `search_*` tools accept a `query`/`field`/`operator`/`filters` shape.
+- Schema corrections: `create_project` required fields; `create_fictional_user` (`email` required, `salutation_type` male/female); `create_additional_address` uses `street_name`/`house_number`; `create_note` only sends `is_public` when provided; `update_contact_relation` fetch-then-merge for partial updates; `create_timesheet` uses the nested `tracking` object; comments are nested under their document.
+
+### Fixed (Bexio API v3.0/v4.0 endpoint migration)
+Bexio retired a large set of v2.0 endpoints; the tools below were calling dead paths (404/400) and now target the current API. Verified live against a real Bexio account except where noted.
+
+- Currencies → `/3.0/currencies`; bank accounts → `/3.0/banking/accounts`
+- Calendar years, business years, VAT periods → `/3.0/accounting/{calendar_years,business_years,vat_periods}`
+- Permissions → `/3.0/permissions`; current user → `/3.0/users/me`; fictional users → `/3.0/fictional_users` (update is PATCH)
+- Document templates → `/3.0/document_templates`; files → `/3.0/files` (update is PATCH; upload/download hit v3.0 directly)
+- Invoice reminders → `/2.0/kb_invoice/{id}/kb_reminder` (was `/reminder`, 404)
+- Expenses → `/4.0/expenses` (moved out of `/4.0/purchase/expenses`)
+- Employees → `/4.0/payroll/employees`; **employee IDs are now UUID strings** (were integers)
+- Absences → nested `/4.0/payroll/employees/{employee_id}/absences`; `list_absences` now requires `employee_id` and `business_year`; absence IDs are strings
+- `list_outgoing_payments` now requires `bill_id` (Bexio lists outgoing payments per bill; previously returned HTTP 400)
+- IBAN/QR payments → nested `/3.0/banking/bank_accounts/{bank_account_id}/...`; `get_*`/`update_*` now require `bank_account_id`
+- Project milestones → `/3.0/projects/{id}/milestones`; work packages → `/3.0/projects/{id}/packages`; project unarchive action renamed to `reactivate`
+- Quote actions corrected to Bexio's names: decline→`reject`, revert→`revertIssue`, create-order→`order`, create-invoice→`invoice`; order create-delivery→`delivery`, create-invoice→`invoice`
+- Contact restore now uses PATCH
+- `list_payroll_documents` returns a clear error (Bexio v4.0 has no payroll-documents list endpoint)
+- `makeVersionedRequest` now normalizes errors to `McpError` (status-based recovery hints; fixes payroll module availability detection)
+
+### Notes
+- **Not live-verified on the test account (HTTP 403 — module/scope restricted):** purchase orders (`/3.0/purchase_orders`), stock locations/areas (`/2.0/stock_place`, `/2.0/stock`). Paths follow the current Bexio API; confirm with an account that has these modules enabled.
+- Endpoints still served on v2.0 (contacts, invoices, orders, quotes, accounts, items, notes, tasks, reference data) are unchanged.
+
+## [2.2.1] - 2026-05-27
+
+### Fixed
+- **Tool parameters were silently dropped for all parametrized tools.** Tools were registered with an empty input schema, so `tools/list` advertised `properties: {}` to MCP clients. Clients stripped every argument before sending, and handlers then reported each required field as `undefined`. Only parameterless tools worked. Tool definitions' JSON-Schema `inputSchema` is now converted to a Zod shape and passed to the SDK, so the full parameter schema is exposed to clients and arguments reach the handlers (new `src/schema-converter.ts`).
+- Stringified numbers sent by clients (e.g. `"170"`, `"100.00"`) are now coerced to numbers at the schema boundary, so write tools like `create_manual_entry` accept them.
+- `get_journal` now uses `GET /3.0/accounting/journal` (was the non-existent v2.0 `/journal`, which returned 404).
+- Manual entries (`list/create/update/delete_manual_entry`) now use `/3.0/accounting/manual_entries` (was the non-existent v2.0 `/manual_entry`, which returned 404). `get_manual_entry` resolves an entry from the list, since Bexio has no single-entry show endpoint.
+
+## [2.2.0] - 2026-03-03
+
+### Added
+- Contact CRUD operations: create, edit, delete, and bulk-delete for contacts and companies
+- Tasks domain with 8 tools for task management
+- Notes domain with 6 tools for contact and company notes
+- Sales document completion: quote, order, invoice, and reminder gap tools for full lifecycle coverage
+- Position management for all 7 document types (quotes, orders, invoices): default, item, text, subtotal, discount, pagebreak, and sub-position CRUD
+- Stock locations and stock areas management
+- Real users listing and document settings tools
+- Additional reference data tools: edit/search for countries, languages, currencies, titles, salutations
+
+### Fixed
+- editOrder, editOrderRepetition, and editInvoice now correctly use PUT instead of POST
+
+### Changed
+- Tool count expanded from 221 to 310 tools across 25 domain modules
+
+## [2.1.0] - 2026-02-23
+
+### Fixed
+- Bills, expenses, and outgoing payments now use Bexio v4.0 API (`/4.0/purchase/bills`, `/4.0/purchase/expenses`, `/4.0/purchase/payments`) — fixes 404 errors from deprecated v2.0 endpoints
+- Purchase orders now use Bexio v3.0 API (`/3.0/purchase_order`)
+
+### Changed
+- Bill, expense, and outgoing payment IDs are now UUID strings (previously integers) to match v4.0 API
+- Outgoing payments use a flat endpoint (no longer nested under bills)
+- All v3.0/v4.0 purchase endpoints use PUT for updates (previously POST)
+- Added reusable `makeVersionedRequest` helper for non-v2.0 API calls; refactored tax endpoints to use it
+
+## [2.0.11] - 2026-02-06
+
+### Changed
+- Restructured README with clearer install instructions
+- MCPB extension download from Releases is now the primary install option
+- Added an install path for clients that load an MCP bundle
+
+## [2.0.9] - 2026-02-02
+
+### Fixed
+- Corrected `mcpName` case to match GitHub organization (`PromptPartner`)
+- Shortened server.json description to meet registry 100-char limit
+
+## [2.0.8] - 2026-02-02
+
+### Added
+- MCP Registry support with `mcpName` identifier
+- `server.json` manifest for registry submission
+- `PUBLISHING.md` guide for release workflow
+
+## [2.0.0] - 2026-02-02
+
+### Added
+- Complete Bexio API coverage with 221 tools across all domains
+- Interactive UI previews for invoices, contacts, and dashboard
+- Swiss QR-bill and IBAN payment support (ISO 20022 compliant)
+- Project management with milestones, work packages, and time tracking
+- Accounting tools: chart of accounts, manual entries, VAT periods
+- Purchase cycle: bills, expenses, purchase orders, outgoing payments
+- File management with upload/download capabilities
+- Payroll tools with automatic module detection
+- MCPB bundle for clients that install an MCP bundle
+- Dual transport: stdio and HTTP
+
+### Changed
+- Complete rewrite with MCP SDK 1.25.2
+- Modular architecture with domain-organized code
+- Zod 3.25.76 for improved validation
+
+### Technical
+- 221 tools organized into 10 domain modules
+- TypeScript with strict mode
+- Vitest for testing
+- Vite for UI bundling
+
+## [1.0.0] - 2025
+
+Initial implementation, published at [bryner.tech](https://bryner.tech/).
+
+### Added
+- Initial Bexio MCP server with 83 tools
+- Core domains: contacts, invoices, quotes, orders, payments
+- MCP SDK 0.5.0 integration
+- Basic Bexio API client
+
+[unreleased]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.1.0...v2.2.0
+[2.1.0]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.0.11...v2.1.0
+[2.0.11]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.0.10...v2.0.11
+[2.0.9]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.0.8...v2.0.9
+[2.0.8]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.0.0...v2.0.8
+[2.0.0]: https://github.com/promptpartner/bexio-mcp-server/releases/tag/v2.0.0
+[1.0.0]: https://bryner.tech/

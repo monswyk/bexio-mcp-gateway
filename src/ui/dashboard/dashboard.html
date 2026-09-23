@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bexio Dashboard</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+      color: #1a1a1a;
+      background: #f3f4f6;
+      padding: 1.5rem;
+    }
+    .dashboard {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .header {
+      margin-bottom: 1.5rem;
+    }
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #111827;
+    }
+    .header .subtitle {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+    .card {
+      background: #fff;
+      border-radius: 0.75rem;
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+      padding: 1.25rem;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 0.75rem;
+    }
+    .card-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+    .card-icon.blue { background: #dbeafe; color: #2563eb; }
+    .card-icon.yellow { background: #fef3c7; color: #d97706; }
+    .card-icon.green { background: #d1fae5; color: #059669; }
+    .card-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #6b7280;
+    }
+    .card-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 0.25rem;
+    }
+    .card-subtitle {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .contacts-list {
+      margin-top: 0.5rem;
+    }
+    .contact-item {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .contact-item:last-child {
+      border-bottom: none;
+    }
+    .contact-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #6b7280;
+      margin-right: 0.75rem;
+    }
+    .contact-name {
+      font-size: 0.875rem;
+      color: #374151;
+    }
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+      color: #6b7280;
+    }
+    .empty-state {
+      text-align: center;
+      color: #6b7280;
+      padding: 1rem;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="loading">Loading dashboard...</div>
+  <script type="module" src="./mcp-app.ts"></script>
+</body>
+</html>

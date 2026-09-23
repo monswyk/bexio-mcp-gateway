@@ -1,0 +1,49 @@
+# bexio-mcp-gateway. TLS is terminated by whatever proxy already fronts this host.
+#
+# Setup (details in docs/docker.md):
+#   cp gateway.env.example .env        # fill in the public URL and Bexio client id
+#   ./scripts/init-secrets.sh          # creates secrets/ and config/clients.json
+#   docker compose up -d --build
+#   open https://<your-domain>/admin and connect "backoffice"
+
+services:
+  bexio-mcp:
+    build: .
+    image: ghcr.io/monswyk/bexio-mcp-gateway:latest
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?set PUBLIC_BASE_URL in .env}
+      BEXIO_CLIENT_ID: ${BEXIO_CLIENT_ID:?set BEXIO_CLIENT_ID in .env}
+      BEXIO_CLIENT_SECRET_FILE: /run/secrets/bexio_client_secret
+      TOKEN_ENCRYPTION_KEY_FILE: /run/secrets/token_encryption_key
+      GATEWAY_ADMIN_KEY_FILE: /run/secrets/gateway_admin_key
+      # Optional: narrow the Bexio permissions or the tool set.
+      BEXIO_SCOPES: ${BEXIO_SCOPES:-}
+      BEXIO_ENABLED_CATEGORIES: ${BEXIO_ENABLED_CATEGORIES:-}
+      MCP_SESSION_TTL_MINUTES: ${MCP_SESSION_TTL_MINUTES:-60}
+    secrets:
+      - bexio_client_secret
+      - token_encryption_key
+      - gateway_admin_key
+    volumes:
+      - bexio-data:/data
+      # Directory mount (not a single file) so edits to clients.json are picked up live.
+      - ./config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+secrets:
+  bexio_client_secret:
+    file: ./secrets/bexio_client_secret
+  token_encryption_key:
+    file: ./secrets/token_encryption_key
+  gateway_admin_key:
+    file: ./secrets/gateway_admin_key
+
+volumes:
+  bexio-data:
