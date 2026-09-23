@@ -3,10 +3,9 @@
 The gateway is a single container that lets several Claude Desktop users work with Bexio at the same time:
 
 ```
-Claude Desktop ─┐                      ┌──────────────────────────┐
-Claude Desktop ─┼─ HTTPS + access key ─▶ bexio-mcp-gateway /mcp   │── OAuth token ──▶ Bexio API
-Claude Desktop (...)  ─┘                      │  connection "backoffice" │
-                                              └──────────────────────────┘
+Claude Desktop (client-1) ─┐
+Claude Desktop (client-2) ─┼─ HTTPS + access key ─▶ /mcp ── OAuth ──▶ Bexio API
+Claude Desktop (client-n) ─┘                        connection "backoffice"
 ```
 
 - A **connection** is one Bexio login (for example the shared `backoffice` user). An admin connects it once in the browser. After that the gateway refreshes the token in the background; the refresh token stays valid as long as it is used at least once a year, and the gateway uses it daily.
@@ -76,7 +75,7 @@ If you already run a reverse proxy, remove the `caddy` service, publish port 800
 For each Claude Desktop user:
 
 ```bash
-./scripts/client-add.sh <name> backoffice
+./scripts/client-add.sh client-1 backoffice
 ```
 
 The script prints the access key (`bmg_...`) **once**. Only its SHA-256 hash is stored in `config/clients.json`. The running gateway picks up the change within seconds; no restart is needed.
@@ -87,8 +86,8 @@ To revoke a client, remove its entry from `config/clients.json` or set `"disable
 
 ```json
 {
-  "client": { "keyHash": "sha256:…", "connection": "backoffice" },
-  "other": { "keyHash": "sha256:…", "connection": "backoffice", "disabled": true }
+  "client-1": { "keyHash": "sha256:…", "connection": "backoffice" },
+  "client-2": { "keyHash": "sha256:…", "connection": "backoffice", "disabled": true }
 }
 ```
 

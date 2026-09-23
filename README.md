@@ -7,10 +7,9 @@ An admin signs in to Bexio once in the browser. After that the gateway refreshes
 This is a fork of [promptpartner/bexio-mcp-server](https://github.com/promptpartner/bexio-mcp-server). It is not affiliated with bexio AG.
 
 ```
-Claude Desktop ─┐                         ┌──────────────────────────┐
-Claude Desktop ─┼─ HTTPS + access key ──▶ │  /mcp                    │── OAuth ──▶ Bexio API
-                       │                         │  connection "backoffice" │
-                       └                         └──────────────────────────┘
+Claude Desktop (client-1) ─┐
+Claude Desktop (client-2) ─┼─ HTTPS + access key ──▶ /mcp ── OAuth ──▶ Bexio API
+Claude Desktop (client-n) ─┘                         connection "backoffice"
 ```
 
 - A **connection** is one Bexio login, for example the shared `backoffice` user. Several clients can share it. A later Bexio user is another connection.
@@ -64,7 +63,7 @@ The gateway requests the scopes the tools need. Payroll scopes are read-only. Na
 ## Add a Claude Desktop user
 
 ```bash
-docker exec bexio-mcp-gateway node dist/cli/client-add.js <name> backoffice --file /data/clients.json
+docker exec bexio-mcp-gateway node dist/cli/client-add.js client-1 backoffice --file /data/clients.json
 ```
 
 The command prints the access key (`bmg_…`) once. Running it again for the same name replaces the key. To revoke someone, delete their entry in `/data/clients.json` or set `"disabled": true`.
