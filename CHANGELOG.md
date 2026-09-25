@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Gateway mode.** With `MCP_MODE=gateway`, one process serves several MCP clients over Streamable HTTP. An admin signs in to Bexio once in the browser. The gateway refreshes that login in the background. Personal access tokens are not used.
+- **One access key per client.** The key is stored only as a SHA-256 hash. Adding, replacing, or disabling a client does not need a restart.
+- **Admin page** at `/admin`. The password is `GATEWAY_ADMIN_KEY`. It connects or removes a Bexio user.
+- **Per-client tool checkboxes.** **List\*** and **Get\*** stay on. **Create\***, **Update\***, and **Delete\*** can be turned off. Update also covers tools that issue, send, mark, or edit. **Save** applies the next time that client connects. A client with no saved choice can call every tool. Replacing the key keeps the choice.
+- **`GET /health`** returns `{"status":"ok"}` when a Bexio user is connected, otherwise `{"status":"degraded"}`.
+
+### Changed
+- In gateway mode, `list_companies` and `select_company` are not registered. A session uses the Bexio user named for that client.
+- `client-add <name> <bexio-user>` records which Bexio user the client acts through.
+
+### Fixed
+- The admin **Remove** button accepts the browser form post.
+
 ## [2.5.0] - 2026-07-01
 
 ### Added — Multiple Bexio companies (mandates) from one server
