@@ -312,8 +312,12 @@ table{border-collapse:collapse;width:100%;margin:1rem 0}th,td{border-bottom:1px 
 .bad{color:#b00020;font-weight:600}.ok{color:#1b7f3b;font-weight:600}form{display:inline}code{background:#f3f3f3;padding:0 .2rem}
 .perms{display:flex;flex-wrap:wrap;gap:.35rem .6rem;align-items:center}
 .perms label{font-size:.85rem;white-space:nowrap}
-.locked{color:#888}.locked input{accent-color:#9a9a9a}</style>
-</head><body><h1>${escapeHtml(title)}</h1>${body}</body></html>`;
+.locked{color:#888}.locked input{accent-color:#9a9a9a}
+.note{font-size:.72rem;line-height:1.35;color:#777;margin:.25rem 0 0}
+footer{margin-top:2.5rem;padding-top:.75rem;border-top:1px solid #ddd;font-size:.8rem;color:#666}
+footer a{color:#666}</style>
+</head><body><h1>${escapeHtml(title)}</h1>${body}
+<footer><a href="https://monswyk.com">Monswyk AG</a> · MIT License</footer></body></html>`;
 }
 
 function renderAdminPage(connections: ConnectionManager, clients: ClientRegistry): string {
@@ -364,6 +368,6 @@ ${connRows || '<tr><td colspan="7">No connection yet.</td></tr>'}</table>
 <h2>Clients</h2>
 <table><tr><th>Name</th><th>Bexio user</th><th>State</th><th>Tools</th></tr>
 ${clientRows || '<tr><td colspan="4">No clients in clients.json.</td></tr>'}</table>
-<p>List* and Get* stay on. Save applies when the client reconnects. Add clients with <code>scripts/client-add.sh &lt;name&gt; &lt;bexio-user&gt;</code> on the Docker host.</p>`
+<p class="note">List* and Get* stay on. Save applies when the client reconnects. Add clients with <code>scripts/client-add.sh &lt;name&gt; &lt;bexio-user&gt;</code> on the Docker host.</p>`
   );
 }

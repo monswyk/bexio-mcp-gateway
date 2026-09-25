@@ -164,6 +164,9 @@ describe("gateway transport", () => {
     expect(html).toContain('name="update"');
     expect(html).toContain('name="delete"');
     expect(html).toContain("checked disabled");
+    expect(html).toContain('href="https://monswyk.com"');
+    expect(html).toContain("Monswyk AG");
+    expect(html).toContain("MIT License");
     expect(html).not.toContain("rt-");
 
     const health = await fetch(`${baseUrl}/health`);
