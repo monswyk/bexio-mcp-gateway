@@ -11,6 +11,7 @@
  */
 
 import { randomUUID } from "node:crypto";
+import querystring from "node:querystring";
 import Fastify, { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
@@ -19,6 +20,7 @@ import { BexioMcpServer } from "../server.js";
 import type { ConnectionManager } from "../auth/bexio-oidc.js";
 import { LABEL_PATTERN } from "../auth/bexio-oidc.js";
 import type { ClientRegistry, GatewayClient } from "../auth/client-config.js";
+import { toolAllowed } from "../auth/client-permissions.js";
 import { safeEqual } from "../auth/crypto.js";
 
 export interface GatewayServerOptions {
@@ -45,8 +47,8 @@ export async function createGatewayServer(options: GatewayServerOptions): Promis
 
   // The Remove button is an HTML form. It posts no fields; the label is in the URL.
   // Fastify rejects that content type unless a parser is registered.
-  app.addContentTypeParser("application/x-www-form-urlencoded", { parseAs: "string" }, (_request, _body, done) => {
-    done(null, undefined);
+  app.addContentTypeParser("application/x-www-form-urlencoded", { parseAs: "string" }, (_request, body, done) => {
+    done(null, querystring.parse(typeof body === "string" ? body : ""));
   });
 
   // ===== MCP =====
@@ -111,6 +113,7 @@ export async function createGatewayServer(options: GatewayServerOptions): Promis
     const server = new BexioMcpServer({
       getClient: () => connections.getClient(client.connection),
       context: { clientName: client.name, connection: client.connection },
+      allowTool: (name) => toolAllowed(name, client.permissions),
     });
     server.initialize();
 
@@ -227,6 +230,21 @@ export async function createGatewayServer(options: GatewayServerOptions): Promis
     return reply.code(303).redirect("/admin");
   });
 
+  app.post<{ Params: { name: string }; Body: querystring.ParsedUrlQuery }>("/admin/clients/:name/permissions", async (request, reply) => {
+    if (!requireAdmin(request, reply)) return reply;
+    if (!sameOrigin(request)) return reply.code(403).send("Cross-origin request rejected.");
+    const on = (key: string) => request.body?.[key] === "1";
+    const saved = clients.setPermissions(request.params.name, {
+      create: on("create"),
+      update: on("update"),
+      delete: on("delete"),
+    });
+    if (!saved) {
+      return reply.code(404).type("text/html; charset=utf-8").send(page("Unknown client", `<p><a href="/admin">Back</a></p>`));
+    }
+    return reply.code(303).redirect("/admin");
+  });
+
   app.get<{ Querystring: { code?: string; state?: string; error?: string; error_description?: string } }>(
     "/oauth/callback",
     async (request, reply) => {
@@ -291,7 +309,10 @@ function page(title: string, body: string): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${escapeHtml(title)} - bexio-mcp-gateway</title>
 <style>body{font-family:system-ui,sans-serif;max-width:960px;margin:2rem auto;padding:0 1rem;color:#222}
 table{border-collapse:collapse;width:100%;margin:1rem 0}th,td{border-bottom:1px solid #ddd;padding:.4rem;text-align:left;font-size:.9rem}
-.bad{color:#b00020;font-weight:600}.ok{color:#1b7f3b;font-weight:600}form{display:inline}code{background:#f3f3f3;padding:0 .2rem}</style>
+.bad{color:#b00020;font-weight:600}.ok{color:#1b7f3b;font-weight:600}form{display:inline}code{background:#f3f3f3;padding:0 .2rem}
+.perms{display:flex;flex-wrap:wrap;gap:.35rem .6rem;align-items:center}
+.perms label{font-size:.85rem;white-space:nowrap}
+.locked{color:#888}.locked input{accent-color:#9a9a9a}</style>
 </head><body><h1>${escapeHtml(title)}</h1>${body}</body></html>`;
 }
 
@@ -313,12 +334,22 @@ function renderAdminPage(connections: ConnectionManager, clients: ClientRegistry
     )
     .join("");
   const known = new Set(conns.map((c) => c.label));
+  const box = (name: string, on: boolean) =>
+    `<label><input type="checkbox" name="${name}" value="1"${on ? " checked" : ""}> ${name[0]!.toUpperCase()}${name.slice(1)}*</label>`;
   const clientRows = clients
     .list()
     .map(
       (c) => `<tr><td>${escapeHtml(c.name)}</td><td><code>${escapeHtml(c.connection)}</code>${
         known.has(c.connection) ? "" : ' <span class="bad">(not connected)</span>'
-      }</td><td>${c.disabled ? "disabled" : "enabled"}</td></tr>`
+      }</td><td>${c.disabled ? "disabled" : "enabled"}</td><td>
+      <form class="perms" method="post" action="/admin/clients/${encodeURIComponent(c.name)}/permissions">
+        <label class="locked"><input type="checkbox" checked disabled> List*</label>
+        <label class="locked"><input type="checkbox" checked disabled> Get*</label>
+        ${box("create", c.permissions.create)}
+        ${box("update", c.permissions.update)}
+        ${box("delete", c.permissions.delete)}
+        <button>Save</button>
+      </form></td></tr>`
     )
     .join("");
   return page(
@@ -331,8 +362,8 @@ ${connRows || '<tr><td colspan="7">No connection yet.</td></tr>'}</table>
   <button>Connect with Bexio</button>
 </form>
 <h2>Clients</h2>
-<table><tr><th>Name</th><th>Bexio user</th><th>State</th></tr>
-${clientRows || '<tr><td colspan="3">No clients in clients.json.</td></tr>'}</table>
-<p>Add clients with <code>scripts/client-add.sh &lt;name&gt; &lt;bexio-user&gt;</code> on the Docker host; changes to clients.json apply without restart.</p>`
+<table><tr><th>Name</th><th>Bexio user</th><th>State</th><th>Tools</th></tr>
+${clientRows || '<tr><td colspan="4">No clients in clients.json.</td></tr>'}</table>
+<p>List* and Get* stay on. Save applies when the client reconnects. Add clients with <code>scripts/client-add.sh &lt;name&gt; &lt;bexio-user&gt;</code> on the Docker host.</p>`
   );
 }

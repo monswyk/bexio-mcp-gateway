@@ -36,6 +36,8 @@ export interface BexioMcpServerOptions {
   /** Resolves the Bexio client per tool call. Defaults to the active company (stdio/HTTP). */
   getClient?: () => BexioClient;
   context?: SessionContext;
+  /** When set, tools for which this returns false are not registered. */
+  allowTool?: (name: string) => boolean;
 }
 
 // Converting 314 JSON schemas is not free; gateway mode builds one McpServer per session.
@@ -48,6 +50,7 @@ export class BexioMcpServer {
   private server: McpServer;
   private getClient: () => BexioClient;
   private context: SessionContext | undefined;
+  private allowTool: ((name: string) => boolean) | undefined;
 
   constructor(options: BexioMcpServerOptions = {}) {
     this.server = new McpServer({
@@ -56,6 +59,7 @@ export class BexioMcpServer {
     });
     this.getClient = options.getClient ?? (() => companyManager.getActiveClient());
     this.context = options.context;
+    this.allowTool = options.allowTool;
   }
 
   /** Register tools. The active Bexio company is resolved per call via
@@ -102,8 +106,13 @@ export class BexioMcpServer {
     const definitions = getAllToolDefinitions();
 
     let registered = 0;
+    let hidden = 0;
     for (const def of definitions) {
       if (this.context && COMPANY_SWITCH_TOOLS.has(def.name)) continue;
+      if (this.allowTool && !this.allowTool(def.name)) {
+        hidden++;
+        continue;
+      }
       const handler = getHandler(def.name);
       if (!handler) {
         logger.warn(`No handler found for tool: ${def.name}`);
@@ -169,7 +178,7 @@ export class BexioMcpServer {
       registered++;
     }
 
-    const message = `Registered ${registered + 1} tools (including ping)`;
+    const message = `Registered ${registered + 1} tools (including ping)${hidden > 0 ? `, hid ${hidden}` : ""}`;
     if (this.context) logger.debug(message);
     else logger.info(message);
   }

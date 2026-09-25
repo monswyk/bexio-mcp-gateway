@@ -22,7 +22,13 @@ describe("parseClientsConfig", () => {
 
   it("accepts a valid config", () => {
     expect(parseClientsConfig(JSON.stringify({ "client-1": { keyHash: hash, connection: "backoffice" } }))).toEqual([
-      { name: "client-1", keyHash: hash, connection: "backoffice", disabled: false },
+      {
+        name: "client-1",
+        keyHash: hash,
+        connection: "backoffice",
+        disabled: false,
+        permissions: { create: true, update: true, delete: true },
+      },
     ]);
   });
 
@@ -52,7 +58,11 @@ describe("ClientRegistry", () => {
     });
     const registry = new ClientRegistry(file);
 
-    expect(registry.authenticate(clientOne)).toEqual({ name: "client-1", connection: "backoffice" });
+    expect(registry.authenticate(clientOne)).toEqual({
+      name: "client-1",
+      connection: "backoffice",
+      permissions: { create: true, update: true, delete: true },
+    });
     expect(registry.authenticate(clientTwo)).toBeUndefined();
     expect(registry.authenticate("bmg_wrong")).toBeUndefined();
     expect(registry.isActive("client-1")).toBe(true);
@@ -74,5 +84,17 @@ describe("ClientRegistry", () => {
     fs.writeFileSync(file, JSON.stringify({}));
     fs.utimesSync(file, evenLater, evenLater);
     expect(registry.authenticate(clientOne)).toBeUndefined();
+  });
+
+  it("stores write permissions and keeps the key", () => {
+    const clientOne = generateClientKey();
+    const file = writeClients({ "client-1": { keyHash: hashClientKey(clientOne), connection: "backoffice" } });
+    const registry = new ClientRegistry(file);
+    expect(registry.setPermissions("client-1", { create: true, update: false, delete: false })).toBe(true);
+    expect(registry.list()[0]?.permissions).toEqual({ create: true, update: false, delete: false });
+    const stored = JSON.parse(fs.readFileSync(file, "utf8")) as { "client-1": { keyHash: string; allow: unknown } };
+    expect(stored["client-1"].keyHash).toBe(hashClientKey(clientOne));
+    expect(stored["client-1"].allow).toEqual({ create: true, update: false, delete: false });
+    expect(registry.setPermissions("missing", { create: false, update: false, delete: false })).toBe(false);
   });
 });

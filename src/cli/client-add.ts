@@ -25,11 +25,17 @@ const [name, connection] = positional;
 if (!name || !connection) usage();
 
 const key = generateClientKey();
-const entry = { keyHash: hashClientKey(key), connection };
+const entry: { keyHash: string; connection: string; allow?: unknown; disabled?: unknown } = {
+  keyHash: hashClientKey(key),
+  connection,
+};
 
 if (file) {
-  const current = fs.existsSync(file) ? (JSON.parse(fs.readFileSync(file, "utf8") || "{}") as Record<string, unknown>) : {};
-  const replaced = name in current;
+  const current = fs.existsSync(file) ? (JSON.parse(fs.readFileSync(file, "utf8") || "{}") as Record<string, Record<string, unknown>>) : {};
+  const previous = current[name];
+  const replaced = previous !== undefined;
+  if (previous && typeof previous.allow === "object") entry.allow = previous.allow;
+  if (previous?.disabled === true) entry.disabled = true;
   current[name] = entry;
   const json = JSON.stringify(current, null, 2) + "\n";
   parseClientsConfig(json);

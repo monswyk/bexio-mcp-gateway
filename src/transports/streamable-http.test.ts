@@ -158,10 +158,37 @@ describe("gateway transport", () => {
     const html = await ok.text();
     expect(html).toContain("backoffice");
     expect(html).toContain("client-1");
+    expect(html).toContain("List*");
+    expect(html).toContain("Get*");
+    expect(html).toContain('name="create"');
+    expect(html).toContain('name="update"');
+    expect(html).toContain('name="delete"');
+    expect(html).toContain("checked disabled");
     expect(html).not.toContain("rt-");
 
     const health = await fetch(`${baseUrl}/health`);
     expect(await health.json()).toEqual({ status: "ok" });
+  });
+
+  it("hides write tools the client is not allowed to call", async () => {
+    const saved = await fetch(`${baseUrl}/admin/clients/client-2/permissions`, {
+      method: "POST",
+      redirect: "manual",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`admin:${ADMIN_KEY}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        Origin: "https://gw.example.test",
+      },
+      body: "create=1&update=1",
+    });
+    expect(saved.status).toBe(303);
+
+    const { client } = await connectClient(clientTwoKey);
+    const names = (await client.listTools()).tools.map((tool) => tool.name);
+    expect(names).toContain("list_contacts");
+    expect(names).toContain("get_contact");
+    expect(names).not.toContain("delete_invoice");
+    await client.close();
   });
 
   it("accepts the Remove form post", async () => {

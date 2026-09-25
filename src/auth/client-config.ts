@@ -13,17 +13,20 @@
 import fs from "node:fs";
 import { logger } from "../logger.js";
 import { LABEL_PATTERN } from "./bexio-oidc.js";
+import { ClientPermissions, parsePermissions } from "./client-permissions.js";
 import { randomToken, safeEqual, sha256Hex } from "./crypto.js";
 
 export interface GatewayClient {
   name: string;
   connection: string;
+  permissions: ClientPermissions;
 }
 
 interface ClientEntry {
   keyHash: string;
   connection: string;
   disabled?: boolean;
+  allow?: ClientPermissions;
 }
 
 const NAME_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
@@ -41,6 +44,7 @@ export function hashClientKey(key: string): string {
 interface ParsedClient extends GatewayClient {
   keyHash: string;
   disabled: boolean;
+  permissions: ClientPermissions;
 }
 
 /** Parse and validate clients.json content. Throws with a readable message on any problem. */
@@ -80,6 +84,7 @@ export function parseClientsConfig(json: string): ParsedClient[] {
       keyHash: entry.keyHash,
       connection: entry.connection,
       disabled: entry.disabled === true,
+      permissions: parsePermissions(entry.allow, name),
     });
   }
   return clients;
@@ -109,7 +114,7 @@ export class ClientRegistry {
       if (safeEqual(client.keyHash, presentedHash)) match = client;
     }
     if (!match || match.disabled) return undefined;
-    return { name: match.name, connection: match.connection };
+    return { name: match.name, connection: match.connection, permissions: match.permissions };
   }
 
   /** Whether a client of this name is still configured and enabled. */
@@ -120,7 +125,32 @@ export class ClientRegistry {
 
   list(): Array<GatewayClient & { disabled: boolean }> {
     this.reloadIfChanged();
-    return this.clients.map(({ name, connection, disabled }) => ({ name, connection, disabled }));
+    return this.clients.map(({ name, connection, disabled, permissions }) => ({
+      name,
+      connection,
+      disabled,
+      permissions,
+    }));
+  }
+
+  /**
+   * Store which write actions this client may call. Takes effect the next time
+   * that client opens a session. Returns false when the name is unknown.
+   */
+  setPermissions(name: string, permissions: ClientPermissions): boolean {
+    this.reloadIfChanged();
+    if (!this.clients.some((client) => client.name === name)) return false;
+    const raw = JSON.parse(fs.readFileSync(this.filePath, "utf8")) as Record<string, ClientEntry>;
+    const entry = raw[name];
+    if (!entry) return false;
+    entry.allow = { create: permissions.create, update: permissions.update, delete: permissions.delete };
+    fs.writeFileSync(this.filePath, JSON.stringify(raw, null, 2) + "\n", { mode: 0o644 });
+    this.clients = parseClientsConfig(fs.readFileSync(this.filePath, "utf8"));
+    this.loadedMtimeMs = fs.statSync(this.filePath).mtimeMs;
+    logger.info(
+      `Client "${name}" permissions: create=${permissions.create} update=${permissions.update} delete=${permissions.delete}.`
+    );
+    return true;
   }
 
   private active(): ParsedClient[] {
