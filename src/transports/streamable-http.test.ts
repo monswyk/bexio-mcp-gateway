@@ -163,4 +163,19 @@ describe("gateway transport", () => {
     const health = await fetch(`${baseUrl}/health`);
     expect(await health.json()).toEqual({ status: "ok" });
   });
+
+  it("accepts the Remove form post", async () => {
+    const res = await fetch(`${baseUrl}/admin/connections/backoffice/delete`, {
+      method: "POST",
+      redirect: "manual",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`admin:${ADMIN_KEY}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        Origin: "https://gw.example.test",
+      },
+      body: "",
+    });
+    expect(res.status).toBe(303);
+    expect(res.headers.get("location")).toBe("/admin");
+  });
 });

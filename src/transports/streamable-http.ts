@@ -43,6 +43,12 @@ export async function createGatewayServer(options: GatewayServerOptions): Promis
   const sessions = new Map<string, Session>();
   const app = Fastify({ logger: false, trustProxy: true, bodyLimit: 10 * 1024 * 1024 });
 
+  // The Remove button is an HTML form. It posts no fields; the label is in the URL.
+  // Fastify rejects that content type unless a parser is registered.
+  app.addContentTypeParser("application/x-www-form-urlencoded", { parseAs: "string" }, (_request, _body, done) => {
+    done(null, undefined);
+  });
+
   // ===== MCP =====
 
   const authenticate = (request: FastifyRequest, reply: FastifyReply): GatewayClient | undefined => {
