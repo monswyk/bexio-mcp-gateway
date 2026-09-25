@@ -24,7 +24,7 @@ const SERVER_NAME = "bexio-mcp-server";
 // Keep in lockstep with package.json / manifest.json / server.json on every release.
 // (The MCPB bundle's dist/package.json is minimal and has no version field, so this
 // is inlined rather than read back from package.json.)
-const SERVER_VERSION = "2.5.0";
+const SERVER_VERSION = "3.0.0";
 
 /** Identifies the caller in gateway mode; enables the audit log. */
 export interface SessionContext {

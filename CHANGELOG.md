@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.0.0] - 2026-09-25 — Gateway fork
+
+Fork of [promptpartner/bexio-mcp-server](https://github.com/promptpartner/bexio-mcp-server) 2.5.0.
 
 ### Added
 - **Gateway mode.** With `MCP_MODE=gateway`, one process serves several MCP clients over Streamable HTTP. An admin signs in to Bexio once in the browser. The gateway refreshes that login in the background. Personal access tokens are not used.
@@ -214,7 +216,6 @@ Initial implementation, published at [bryner.tech](https://bryner.tech/).
 - MCP SDK 0.5.0 integration
 - Basic Bexio API client
 
-[unreleased]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.2.0...HEAD
 [2.2.0]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.0.11...v2.1.0
 [2.0.11]: https://github.com/promptpartner/bexio-mcp-server/compare/v2.0.10...v2.0.11
