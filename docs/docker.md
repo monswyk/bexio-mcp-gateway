@@ -100,6 +100,8 @@ Hand the key to the user over a secure channel. Running the command again for th
 
 To revoke a client, remove its entry from `config/clients.json` or set `"disabled": true`. Open sessions of that client are closed shortly afterwards.
 
+On `/admin`, each client has five tool checkboxes. **List\*** and **Get\*** stay on. **Create\***, **Update\***, and **Delete\*** can be turned off. Update also covers tools that issue, send, mark, or edit. **Save** applies when that client connects again. A client with no saved choice can call every tool. Replacing its key keeps the choice. The choice is stored as `allow`.
+
 ```json
 {
   "client-1": { "keyHash": "sha256:…", "connection": "bexio-user" },

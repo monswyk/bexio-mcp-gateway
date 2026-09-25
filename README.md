@@ -68,6 +68,8 @@ docker exec bexio-mcp-gateway node dist/cli/client-add.js client-1 bexio-user --
 
 The command prints the access key (`bmg_…`) once. Running it again for the same name replaces the key. To revoke someone, delete their entry in `/data/clients.json` or set `"disabled": true`.
 
+On `/admin`, each client has five tool checkboxes. **List\*** and **Get\*** stay on. **Create\***, **Update\***, and **Delete\*** can be turned off. Update also covers tools that issue, send, mark, or edit. **Save** applies when that client connects again. A client with no saved choice can call every tool. Replacing its key keeps the choice.
+
 Point the MCP client at `https://<your-domain>/mcp` and send this header on every request:
 
 ```
